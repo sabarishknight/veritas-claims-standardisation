@@ -1,0 +1,112 @@
+{
+ "traceId": "b32fce9976194cc09c9486d15aa7cce2",
+ "statusCode": "200",
+ "message": [
+  "Success"
+ ],
+ "data": {
+  "responseDetails": [
+   {
+    "classifier": "lab_report",
+    "data": {
+     "basic_info": {
+      "uhid": "SYN-0001",
+      "age": "41 Years",
+      "bill_date": "12-10-2025",
+      "gender": "M",
+      "lab_or_hospital_name": "Synthetic Diagnostics",
+      "patient_name": "Test Patient",
+      "reports_date": "12-10-2025"
+     },
+     "report_details": [
+      {
+       "page_no": 0,
+       "range": "4000-10000",
+       "result": "9700",
+       "test_analytics": "normal",
+       "test_name": "aemoglobin",
+       "unit": "cell/cu.mm"
+      },
+      {
+       "page_no": 0,
+       "range": "4.50-5.50",
+       "result": "5.45",
+       "test_analytics": "normal",
+       "test_name": "otal WBC Count",
+       "unit": "mil/cu.mm"
+      },
+      {
+       "page_no": 0,
+       "range": "36-46",
+       "result": "44.9",
+       "test_analytics": "normal",
+       "test_name": "RBC Coun",
+       "unit": "%"
+      },
+      {
+       "page_no": 0,
+       "range": "83-101",
+       "result": "82",
+       "test_analytics": "normal",
+       "test_name": "aematocrit",
+       "unit": "FL"
+      },
+      {
+       "page_no": 0,
+       "range": "27-32",
+       "result": "28.5",
+       "test_analytics": "normal",
+       "test_name": "ean Cell Volume (MCV)",
+       "unit": "pg"
+      },
+      {
+       "page_no": 0,
+       "range": "31.5-34.5",
+       "result": "34",
+       "test_analytics": "normal",
+       "test_name": "MCH",
+       "unit": "gm/dL"
+      },
+      {
+       "page_no": 0,
+       "range": "150000-410000",
+       "result": "250000",
+       "test_analytics": "normal",
+       "test_name": "MCHC",
+       "unit": "cells/cu.mm"
+      }
+     ]
+    },
+    "status": "success",
+    "errorMessage": null,
+    "fileId": null
+   }
+  ],
+  "correlationId": "7e5639f11d754186bb9fe17ef9fb554f",
+  "documentId": "DOCDD47F31321A84813863BC4CD5F",
+  "metaDetails": [
+   {
+    "key": "DestinationIdentifier",
+    "value": "stg-datalake"
+   },
+   {
+    "key": "claim_no",
+    "value": "CLAIM-MISALIGNED"
+   },
+   {
+    "key": "nt_code",
+    "value": "NT-SYNTH"
+   },
+   {
+    "key": "source_system",
+    "value": "FASTTRACK"
+   },
+   {
+    "key": "ConsumerClientId",
+    "value": "fd121423-209d-4684-a9c6-bce868b04e6f"
+   }
+  ],
+  "status": true,
+  "message": null
+ }
+}

@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "veritas-standardiser"
+version = "1.0.0"
+description = "Medical-data standardisation pipeline for Veritas Claims"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary" }
+
+# One runtime dependency, on purpose. The reviewer should be able to run
+# `make demo` without a virtualenv or a lockfile, and a claims-processing
+# environment usually has no outbound network. Everything else is stdlib.
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# Cloud targets. Imported lazily, so the core pipeline never needs them.
+gcp = [
+    "google-cloud-bigquery>=3.17",
+    "google-cloud-storage>=2.14",
+    "google-cloud-secret-manager>=2.18",
+]
+# The GenAI tail resolver. Without it the pipeline uses a deterministic local
+# fallback and says so.
+genai = [
+    "google-genai>=0.3",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[project.scripts]
+veritas = "veritas.cli:main"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+# The suite is written on stdlib unittest so it also runs with
+# `python3 -m unittest discover -s tests -t .` and no install at all.
+
+[tool.ruff]
+line-length = 96
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RET", "ARG", "PTH"]
+ignore = [
+    "E501",    # long lines are usually comments explaining a decision
+    "B008",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["ARG", "N802", "SIM"]
+# Every page handler shares one signature (sink, config, params, path) so the
+# router can dispatch uniformly; most handlers legitimately ignore some of it.
+"src/veritas/ui/server.py" = ["ARG001"]

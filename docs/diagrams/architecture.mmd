@@ -1,0 +1,65 @@
+flowchart LR
+  subgraph CLINICS["500+ clinics"]
+    C1["Clinic JSON<br/>200k files/day"]
+  end
+
+  subgraph INGEST["Ingestion — FR-1"]
+    GCS[("GCS landing<br/>clinic_id=/dt=<br/>SHA-256 at the boundary")]
+    PS["Pub/Sub<br/>object-finalise"]
+    SWEEP["Reconciliation sweep<br/>(missed notifications)"]
+  end
+
+  subgraph PROCESS["Processing — Cloud Run — FR-2, FR-3"]
+    ENV["Envelope router<br/>schema-on-read"]
+    DEDUP["Duplicate suppression<br/>content hash, not IDs"]
+    STD["Standardise<br/>names · results · units<br/>ranges · demographics · drugs"]
+    COH["Coherence engine<br/>dimension + magnitude<br/>report-level misalignment"]
+    CLS["Classify<br/>Invalid / Outlier /<br/>Within / Above / Below"]
+  end
+
+  subgraph GENAI["GenAI — the unresolved tail only"]
+    LLM["Gemini Flash<br/>batched, capped"]
+    ALIAS[("learned_alias<br/>paid once, free forever")]
+  end
+
+  subgraph STORE["Storage — FR-4"]
+    BQ[("BigQuery<br/>partitioned by ingest date<br/>clustered by source/test/class<br/>MERGE on deterministic id")]
+    DLQ[("Dead letter<br/>_deadletter/reason/date/")]
+  end
+
+  subgraph SERVE["Serving — FR-5"]
+    VIEWS["Views<br/>v_ideal_output_schema (78 cols)<br/>v_test_wide (5 per test)<br/>v_clinic_quality · v_lineage"]
+    UI["Ops UI — Cloud Run + IAP<br/>dashboard · flagged queue<br/>record inspector"]
+    ADJ["Claims adjudication"]
+  end
+
+  subgraph CONFIG["Configuration — NFR-2 — zero-code onboarding"]
+    CFG["test_catalog · units<br/>clinics/*.yaml · medicines<br/>fingerprint recorded per run"]
+  end
+
+  subgraph OBS["Observability — NFR-5"]
+    LOGS["Structured logs<br/>trace_id · correlation_id"]
+    MON["Log-based metrics<br/>alert: error > 1% · lag > 15m"]
+  end
+
+  C1 --> GCS --> PS --> ENV
+  GCS -.-> SWEEP -.-> ENV
+  ENV --> DEDUP --> STD --> COH --> CLS --> BQ --> VIEWS
+  VIEWS --> UI
+  VIEWS --> ADJ
+  STD -. unmapped names only .-> LLM --> ALIAS
+  ALIAS -. seeds next run .-> STD
+  ENV -. unreadable .-> DLQ
+  STD -. not a test .-> DLQ
+  COH -. quarantined .-> UI
+  CFG -.-> ENV
+  CFG -.-> STD
+  CFG -.-> COH
+  PROCESS -.-> LOGS --> MON
+
+  classDef store fill:#cde2fb,stroke:#2a78d6,color:#0b0b0b
+  classDef danger fill:#f7d7d7,stroke:#d03b3b,color:#0b0b0b
+  classDef cfg fill:#f0efec,stroke:#898781,color:#0b0b0b
+  class GCS,BQ,ALIAS,DLQ store
+  class COH danger
+  class CFG,LOGS,MON cfg

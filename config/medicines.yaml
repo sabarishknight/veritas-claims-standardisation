@@ -1,0 +1,100 @@
+# ---------------------------------------------------------------------------
+# Brand -> generic medicine mapping  (FR-2.6, optional requirement)
+#
+# Indian discharge summaries are written in brands, and brands are what the
+# claim is priced on, but fraud and utilisation analytics only work on
+# molecules. Mapping is therefore not cosmetic: "Tab. Pan 40", "CAP. PAN 40"
+# and "INJ PANTOP 40 MG IV 12 HRLY" are one molecule across three claims.
+#
+# HONESTY ABOUT CONFIDENCE
+#   Brand->molecule is a regulated mapping. Entries carry `confidence` and a
+#   `verify: true` flag where the mapping was inferred from context rather than
+#   known with certainty. Rows resolved from a `verify: true` entry are written
+#   with normalization_method='brand_unverified' so they can be excluded from
+#   clinical analytics until a pharmacist signs them off. In production this
+#   table is replaced by a licensed drug master (CIMS India / MedEx / the
+#   payor's own formulary) - see docs/assumptions.md D-9.
+# ---------------------------------------------------------------------------
+version: 3
+
+# Dosage-form prefixes stripped before matching. Order matters: longest first.
+dosage_forms:
+  - {token: "tab.", form: tablet}
+  - {token: "tab", form: tablet}
+  - {token: "cap.", form: capsule}
+  - {token: "cap", form: capsule}
+  - {token: "inj.", form: injection}
+  - {token: "inj", form: injection}
+  - {token: "syp.", form: syrup}
+  - {token: "syp", form: syrup}
+  - {token: "syr.", form: syrup}
+  - {token: "powder", form: powder}
+  - {token: "amp.", form: ampoule}
+  - {token: "amp", form: ampoule}
+  - {token: "oint.", form: ointment}
+  - {token: "drops", form: drops}
+  - {token: "iv", form: intravenous}
+
+# Lines in the medication array that are not medicines. Consumables and
+# placeholders must not become drug-utilisation rows.
+non_medicine_tokens:
+  - "n/a"
+  - "na"
+  - "nil"
+  - "-"
+  - "iv fluids"
+  - "ivset intraflow"
+  - "iv fixer"
+  - "iv set"
+  - "syringe"
+  - "syringe 10ml"
+  - "syringe 2ml"
+  - "if"
+  - "amp iv"
+  - "an das"
+
+brands:
+  - {brand: "PANTOPRAZOLE",  generic: "Pantoprazole", atc: "A02BC02", confidence: 1.0,
+     variants: ["pan", "pan 40", "pan-40", "pan40", "pantop", "pantop 40",
+                "pantocid", "pantocid 40", "pantoprazole"]}
+  - {brand: "PAN D",         generic: "Pantoprazole + Domperidone", atc: "A02BC02", confidence: 1.0,
+     combination: true, variants: ["pan d", "pan-d", "pand", "pan d 40"]}
+  - {brand: "PARACETAMOL",   generic: "Paracetamol", atc: "N02BE01", confidence: 1.0,
+     variants: ["pcm", "dolo", "dolo 650", "dolo-650", "calpol", "crocin",
+                "paracetamol", "fepanil"]}
+  - {brand: "DICLOFENAC",    generic: "Diclofenac", atc: "M01AB05", confidence: 1.0,
+     variants: ["dynapar", "voveran", "diclofenac"]}
+  - {brand: "DICLOMOL",      generic: "Diclofenac + Paracetamol", atc: "M01AB05", confidence: 1.0,
+     combination: true, variants: ["diclomol", "diclomol tab"]}
+  - {brand: "ONDANSETRON",   generic: "Ondansetron", atc: "A04AA01", confidence: 1.0,
+     variants: ["emeset", "zofer", "vomikind", "ondansetron"]}
+  - {brand: "PROMETHAZINE",  generic: "Promethazine", atc: "R06AD02", confidence: 0.9,
+     variants: ["phenargan", "phenergan", "promethazine"]}
+  - {brand: "PENTAZOCINE",   generic: "Pentazocine", atc: "N02AD01", confidence: 1.0,
+     variants: ["fortwin", "pentazocine"]}
+  - {brand: "CEFUROXIME",    generic: "Cefuroxime", atc: "J01DC02", confidence: 1.0,
+     variants: ["ceftum", "ceftum 500", "supacef", "cefuroxime"]}
+  - {brand: "CEFIXIME",      generic: "Cefixime", atc: "J01DD08", confidence: 0.8, verify: true,
+     variants: ["ceftas", "ceftas 400", "ceftas- 400", "cefixime", "medicip"]}
+  - {brand: "CEFTRIAXONE",   generic: "Ceftriaxone", atc: "J01DD04", confidence: 1.0,
+     variants: ["monocef", "ceftriaxone", "monocef 1 gr"]}
+  - {brand: "AZITHROMYCIN",  generic: "Azithromycin", atc: "J01FA10", confidence: 1.0,
+     variants: ["azithral", "azithral 500", "azee", "azithromycin"]}
+  - {brand: "MISOPROSTOL",   generic: "Misoprostol", atc: "G02AD06", confidence: 0.85, verify: true,
+     variants: ["miso", "misoprost", "misoprostol", "cytotec"]}
+  - {brand: "OXYTOCIN",      generic: "Oxytocin", atc: "H01BB02", confidence: 0.85, verify: true,
+     variants: ["synto", "syntocinon", "oxytocin", "pitocin"]}
+  - {brand: "LACTULOSE",     generic: "Lactulose", atc: "A06AD11", confidence: 1.0,
+     variants: ["duphalac", "lactulose", "looz"]}
+  - {brand: "ISPAGHULA",     generic: "Ispaghula husk", atc: "A06AC01", confidence: 0.9,
+     variants: ["naturolax", "isabgol", "ispaghula", "fibofit"]}
+  - {brand: "PROBIOTIC",     generic: "Lactobacillus (probiotic)", atc: "A07FA01", confidence: 0.9,
+     variants: ["vizylac", "vsl", "darolac", "sporlac"]}
+  - {brand: "RANITIDINE",    generic: "Ranitidine", atc: "A02BA02", confidence: 1.0,
+     variants: ["aciloc", "zinetac", "ranitidine", "aciloc inj"]}
+  - {brand: "DROTAVERINE",   generic: "Drotaverine", atc: "A03AD02", confidence: 1.0,
+     variants: ["drotin", "drotaverine", "drotin m"]}
+  - {brand: "HYOSCINE",      generic: "Hyoscine butylbromide", atc: "A03BB01", confidence: 0.9,
+     variants: ["buscopan", "bucsopan", "hyoscine"]}
+  - {brand: "VITAMIN B COMPLEX", generic: "Vitamin B complex", atc: "A11EA", confidence: 0.9,
+     variants: ["neuro bion forte", "neurobion", "neuro bion", "becosules"]}

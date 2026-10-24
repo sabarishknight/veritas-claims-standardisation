@@ -1,0 +1,20 @@
+{
+ "traceId": "92b782c856f046e8be299a7b0e12ad51",
+ "statusCode": "200",
+ "message": [
+  "Success"
+ ],
+ "data": {
+  "responseDetails": [],
+  "correlationId": "a5b446653b80456ab1a78740e9f9ab81",
+  "documentId": "DOC-EMPTY",
+  "metaDetails": [
+   {
+    "key": "source_system",
+    "value": "FASTTRACK"
+   }
+  ],
+  "status": true,
+  "message": null
+ }
+}

@@ -1,0 +1,754 @@
+# ---------------------------------------------------------------------------
+# Canonical test catalogue  (FR-2.1 name normalisation, FR-3.1/3.2 validation)
+#
+# One entry per canonical test. Everything the pipeline knows about a test is
+# here; adding a test or an alias is a config change, never a code change
+# (NFR-2.1).
+#
+# FIELDS
+#   canonical       Output value of `test_name_canonical`. Stable - downstream
+#                   marts join on it, so renaming one is a breaking change.
+#   loinc           LOINC code, for interoperability with payor systems.
+#                   INDICATIVE ONLY - see docs/assumptions.md D-7: these were
+#                   hand-assigned and must be validated against the official
+#                   LOINC release before production use.
+#   panel           Grouping for the ops UI and for panel-level completeness.
+#   dimension       Must match a dimension in units.yaml. This is the safety
+#                   check: a row whose unit is of a different dimension is
+#                   quarantined, not converted.
+#   canonical_unit  Output value of `unit_canonical`; must belong to dimension.
+#   value_type      numeric | qualitative | compound | narrative
+#   reference_ranges Ordered; first match on sex wins, `ANY` is the fallback.
+#                   Ranges are adult values unless noted (see D-4: paediatric
+#                   ranges are out of scope and the sample patients include a
+#                   16 kg child, so some flags will be false positives).
+#   plausible       Hard physiological bounds. OUTSIDE = Outlier (FR-3.2),
+#                   which is a *different* finding from Above/Below Range: one
+#                   is a sick patient, the other is bad data. Conflating them
+#                   is how a haemoglobin of 999 reaches an adjudication rule.
+#   aliases         Verbatim spellings observed in source traffic. Resolved by
+#                   exact match at tier T0 with confidence 1.0.
+#
+# DELIBERATELY NOT ALIASED
+#   The OCR-cropped spellings in Sample_JSON_file2 (`aemoglobin`, `atelet
+#   Count`, `eutrophils`) are absent on purpose. Hard-coding them would mask
+#   the defect: those rows are also value-misaligned, and we want the fuzzy
+#   tier to resolve the name at reduced confidence and the coherence engine to
+#   reject the row. See docs/data-profile.md F-1.
+# ---------------------------------------------------------------------------
+version: 7
+
+defaults:
+  value_type: numeric
+  outlier_sigma: 6.0        # robust z-score fallback when no `plausible` given
+
+canonical_tests:
+
+  # ---------------------------------------------------------------- CBC -----
+  - canonical: HAEMOGLOBIN
+    loinc: "718-7"
+    panel: CBC
+    dimension: mass_concentration
+    canonical_unit: "g/dL"
+    reference_ranges:
+      - {sex: M, low: 13.0, high: 17.0}
+      - {sex: F, low: 12.0, high: 15.0}
+      - {sex: ANY, low: 12.0, high: 17.0}
+    plausible: {low: 1.0, high: 25.0}
+    aliases: ["HAEMOGLOBIN", "HEMOGLOBIN", "Haemoglobin", "Hemoglobin", "Hb",
+              "HB", "HGB", "Haemoglobin (whole blood)", "HAEMOGLOBIN (Hb)",
+              "Hb (Haemoglobin)", "HEMOGLOBIN (HB)"]
+
+  - canonical: WHITE BLOOD CELL COUNT
+    loinc: "6690-2"
+    panel: CBC
+    dimension: count_per_volume
+    canonical_unit: "cells/cu.mm"
+    reference_ranges:
+      - {sex: ANY, low: 4000.0, high: 11000.0}
+    plausible: {low: 50.0, high: 500000.0}
+    aliases: ["TOTAL WBC COUNT", "Total WBC Count", "WBC COUNT", "WBC",
+              "TOTAL LEUCOCYTE COUNT", "TOTAL LEUCOCYTE COUNT (TLC)", "TLC",
+              "Total Leucocyte Count", "Total Leucocyte Count (TLC)",
+              "CORRECTED TLC", "Total Leukocyte Count", "WBC TOTAL"]
+
+  - canonical: RED BLOOD CELL COUNT
+    loinc: "789-8"
+    panel: CBC
+    dimension: count_per_volume
+    canonical_unit: "mil/cu.mm"
+    reference_ranges:
+      - {sex: M, low: 4.5, high: 5.5}
+      - {sex: F, low: 3.8, high: 4.8}
+      - {sex: ANY, low: 3.8, high: 5.5}
+    plausible: {low: 0.5, high: 10.0}
+    aliases: ["RBC", "RBC COUNT", "Red Blood Cell Count",
+              "Red Blood Cell Count (RBC)", "RBC Count", "Total RBC Count",
+              "ERYTHROCYTE COUNT"]
+
+  - canonical: HEMATOCRIT
+    loinc: "4544-3"
+    panel: CBC
+    dimension: fraction
+    canonical_unit: "%"
+    reference_ranges:
+      - {sex: M, low: 40.0, high: 50.0}
+      - {sex: F, low: 36.0, high: 46.0}
+      - {sex: ANY, low: 36.0, high: 50.0}
+    plausible: {low: 5.0, high: 70.0}
+    aliases: ["HAEMATOCRIT", "HEMATOCRIT", "Haematocrit", "HCT", "PCV",
+              "Haematocrit (PCV)", "Packed Cell Volume", "Packed Cell Volume (PCV)",
+              "PACKED CELL VOLUME", "Haematocrit HCT"]
+
+  - canonical: MEAN CORPUSCULAR VOLUME
+    loinc: "787-2"
+    panel: CBC
+    dimension: cell_volume
+    canonical_unit: "fL"
+    reference_ranges: [{sex: ANY, low: 83.0, high: 101.0}]
+    plausible: {low: 40.0, high: 160.0}
+    aliases: ["MCV", "Mean Cell Volume (MCV)", "Mean Corp Volume MCV",
+              "MEAN CORPUSCULAR VOLUME", "Mean Corpuscular Volume (MCV)",
+              "MCV (whole blood/calculated)"]
+
+  - canonical: MEAN CORPUSCULAR HEMOGLOBIN
+    loinc: "785-6"
+    panel: CBC
+    dimension: cell_mass
+    canonical_unit: "pg"
+    reference_ranges: [{sex: ANY, low: 27.0, high: 32.0}]
+    plausible: {low: 10.0, high: 60.0}
+    aliases: ["MCH", "MEAN CORPUSCULAR HEMOGLOBIN", "Mean Corp Hb MCH",
+              "MCH (whole blood/calculated)"]
+
+  - canonical: MEAN CORPUSCULAR HEMOGLOBIN CONCENTRATION
+    loinc: "786-4"
+    panel: CBC
+    dimension: mass_concentration
+    canonical_unit: "g/dL"
+    reference_ranges: [{sex: ANY, low: 31.5, high: 34.5}]
+    plausible: {low: 15.0, high: 50.0}
+    aliases: ["MCHC", "Mean Corp Hb Conc MCHC",
+              "MEAN CORPUSCULAR HAEMOGLOBIN CONCENTRATION",
+              "MCHC (whole blood/calculated)"]
+
+  - canonical: RDW-CV
+    loinc: "788-0"
+    panel: CBC
+    dimension: fraction
+    canonical_unit: "%"
+    reference_ranges: [{sex: ANY, low: 11.6, high: 14.0}]
+    plausible: {low: 5.0, high: 40.0}
+    aliases: ["RDW-CV", "RDW - CV", "R.D.W", "RDW", "RDW CV",
+              "RDW - CV (whole blood/calculated)", "Red Cell Distribution Width"]
+
+  - canonical: RDW-SD
+    loinc: "21000-5"
+    panel: CBC
+    dimension: cell_volume
+    canonical_unit: "fL"
+    reference_ranges: [{sex: ANY, low: 37.0, high: 54.0}]
+    plausible: {low: 15.0, high: 120.0}
+    aliases: ["RDW-SD", "RDW - SD", "RDW SD"]
+
+  - canonical: PLATELET COUNT
+    loinc: "777-3"
+    panel: CBC
+    dimension: count_per_volume
+    canonical_unit: "cells/cu.mm"
+    reference_ranges: [{sex: ANY, low: 150000.0, high: 410000.0}]
+    plausible: {low: 1000.0, high: 3000000.0}
+    aliases: ["PLATELET COUNT", "Platelet Count", "PLATELETS", "Platelets",
+              "PLT", "Platelet Count (whole blood)"]
+
+  - canonical: MEAN PLATELET VOLUME
+    loinc: "32623-1"
+    panel: CBC
+    dimension: cell_volume
+    canonical_unit: "fL"
+    reference_ranges: [{sex: ANY, low: 8.1, high: 13.9}]
+    plausible: {low: 3.0, high: 30.0}
+    aliases: ["MPV", "MPV (Mean Platelet Volume)", "Mean Platelet Volume"]
+
+  - canonical: NEUTROPHILS PERCENT
+    loinc: "770-8"
+    panel: DLC
+    dimension: fraction
+    canonical_unit: "%"
+    reference_ranges: [{sex: ANY, low: 40.0, high: 70.0}]
+    plausible: {low: 0.0, high: 100.0}
+    aliases: ["NEUTROPHILS", "Neutrophils", "Neutrophil", "NEUTROPHIL",
+              "POLYMORPHS", "Polymorphs"]
+
+  - canonical: LYMPHOCYTES PERCENT
+    loinc: "736-9"
+    panel: DLC
+    dimension: fraction
+    canonical_unit: "%"
+    reference_ranges: [{sex: ANY, low: 20.0, high: 40.0}]
+    plausible: {low: 0.0, high: 100.0}
+    aliases: ["LYMPHOCYTES", "Lymphocytes", "Lymphocyte", "LYMPHOCYTE"]
+
+  - canonical: EOSINOPHILS PERCENT
+    loinc: "713-8"
+    panel: DLC
+    dimension: fraction
+    canonical_unit: "%"
+    reference_ranges: [{sex: ANY, low: 1.0, high: 6.0}]
+    plausible: {low: 0.0, high: 100.0}
+    aliases: ["EOSINOPHILS", "Eosinophils", "Eosinophil", "EOSINOPHIL"]
+
+  - canonical: MONOCYTES PERCENT
+    loinc: "5905-5"
+    panel: DLC
+    dimension: fraction
+    canonical_unit: "%"
+    reference_ranges: [{sex: ANY, low: 2.0, high: 10.0}]
+    plausible: {low: 0.0, high: 100.0}
+    aliases: ["MONOCYTES", "Monocytes", "Monocyte", "MONOCYTE"]
+
+  - canonical: BASOPHILS PERCENT
+    loinc: "706-2"
+    panel: DLC
+    dimension: fraction
+    canonical_unit: "%"
+    reference_ranges: [{sex: ANY, low: 0.0, high: 1.0}]
+    plausible: {low: 0.0, high: 100.0}
+    aliases: ["BASOPHILS", "Basophils", "Basophil", "BASOPHIL"]
+
+  - canonical: NEUTROPHIL LYMPHOCYTE RATIO
+    loinc: "81090-2"
+    panel: DLC
+    dimension: dimensionless_ratio
+    canonical_unit: "ratio"
+    reference_ranges: [{sex: ANY, low: 0.78, high: 3.53}]
+    plausible: {low: 0.01, high: 200.0}
+    aliases: ["Neutrophil lymphocyte ratio (NLR)", "NLR",
+              "Neutrophil Lymphocyte Ratio"]
+
+
+  # --- Absolute differential counts -----------------------------------------
+  # Labs report the differential either as a percentage or as an absolute count
+  # per unit volume, and they use *the same name* for both: "NEUTROPHILS" with
+  # unit "%" is a proportion, "NEUTROPHILS" with unit "cells/cu.mm" is an
+  # absolute count. They are different tests with different reference ranges,
+  # and conflating them puts a 2230.8 next to a 52 in the same column.
+  #
+  # These entries share their aliases with the PERCENT entries above. The
+  # resolver disambiguates on the row's unit dimension (see
+  # standardise/names.py, `unit_hint`), which is the only evidence that can
+  # settle it. With no unit the PERCENT entry wins, because the percentage form
+  # is overwhelmingly the more common report style.
+  - canonical: ABSOLUTE NEUTROPHIL COUNT
+    loinc: "751-8"
+    panel: DLC
+    dimension: count_per_volume
+    canonical_unit: "cells/cu.mm"
+    reference_ranges: [{sex: ANY, low: 1800.0, high: 7700.0}]
+    plausible: {low: 0.0, high: 100000.0}
+    aliases: ["NEUTROPHILS", "Neutrophils", "Neutrophil", "ABSOLUTE NEUTROPHIL COUNT",
+              "ANC", "Absolute Neutrophil Count"]
+
+  - canonical: ABSOLUTE LYMPHOCYTE COUNT
+    loinc: "731-0"
+    panel: DLC
+    dimension: count_per_volume
+    canonical_unit: "cells/cu.mm"
+    reference_ranges: [{sex: ANY, low: 1000.0, high: 4800.0}]
+    plausible: {low: 0.0, high: 100000.0}
+    aliases: ["LYMPHOCYTES", "Lymphocytes", "Lymphocyte",
+              "ABSOLUTE LYMPHOCYTE COUNT", "Absolute Lymphocyte Count"]
+
+  - canonical: ABSOLUTE EOSINOPHIL COUNT
+    loinc: "711-2"
+    panel: DLC
+    dimension: count_per_volume
+    canonical_unit: "cells/cu.mm"
+    reference_ranges: [{sex: ANY, low: 15.0, high: 500.0}]
+    plausible: {low: 0.0, high: 50000.0}
+    aliases: ["EOSINOPHILS", "Eosinophils", "Eosinophil",
+              "ABSOLUTE EOSINOPHIL COUNT", "AEC", "Absolute Eosinophil Count"]
+
+  - canonical: ABSOLUTE MONOCYTE COUNT
+    loinc: "742-7"
+    panel: DLC
+    dimension: count_per_volume
+    canonical_unit: "cells/cu.mm"
+    reference_ranges: [{sex: ANY, low: 200.0, high: 1000.0}]
+    plausible: {low: 0.0, high: 50000.0}
+    aliases: ["MONOCYTES", "Monocytes", "Monocyte", "ABSOLUTE MONOCYTE COUNT"]
+
+  - canonical: ABSOLUTE BASOPHIL COUNT
+    loinc: "704-7"
+    panel: DLC
+    dimension: count_per_volume
+    canonical_unit: "cells/cu.mm"
+    reference_ranges: [{sex: ANY, low: 0.0, high: 200.0}]
+    plausible: {low: 0.0, high: 20000.0}
+    aliases: ["BASOPHILS", "Basophils", "Basophil", "ABSOLUTE BASOPHIL COUNT"]
+
+  # ------------------------------------------------------- Electrolytes -----
+  - canonical: SODIUM
+    loinc: "2951-2"
+    panel: ELECTROLYTES
+    dimension: substance_concentration
+    canonical_unit: "mmol/L"
+    reference_ranges: [{sex: ANY, low: 135.0, high: 145.0}]
+    plausible: {low: 90.0, high: 190.0}
+    aliases: ["SODIUM", "Sodium", "Na+", "NA+", "Na", "Sodium (Na+)",
+              "SODIUM, SERUM", "Serum Sodium"]
+
+  - canonical: POTASSIUM
+    loinc: "2823-3"
+    panel: ELECTROLYTES
+    dimension: substance_concentration
+    canonical_unit: "mmol/L"
+    reference_ranges: [{sex: ANY, low: 3.5, high: 5.1}]
+    plausible: {low: 1.0, high: 10.0}
+    aliases: ["POTASSIUM", "Potassium", "K+", "K", "Potassium (K+)",
+              "POTASSIUM, SERUM", "Serum Potassium"]
+
+  - canonical: CHLORIDE
+    loinc: "2075-0"
+    panel: ELECTROLYTES
+    dimension: substance_concentration
+    canonical_unit: "mmol/L"
+    reference_ranges: [{sex: ANY, low: 98.0, high: 107.0}]
+    plausible: {low: 50.0, high: 160.0}
+    aliases: ["CHLORIDE", "Chloride", "Cl-", "CI-", "Chloride (CI-)",
+              "Chloride (Cl-)", "CHLORIDE, SERUM"]
+
+  - canonical: CALCIUM
+    loinc: "17861-6"
+    panel: ELECTROLYTES
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges: [{sex: ANY, low: 8.6, high: 10.3}]
+    plausible: {low: 3.0, high: 20.0}
+    aliases: ["CALCIUM", "Calcium", "Ca2+ (Calcium)", "Serum Calcium",
+              "CALCIUM, SERUM", "Ca2+"]
+
+  - canonical: PHOSPHORUS
+    loinc: "2777-1"
+    panel: ELECTROLYTES
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges: [{sex: ANY, low: 2.5, high: 4.5}]
+    plausible: {low: 0.3, high: 20.0}
+    aliases: ["PHOSPHORUS", "PHOSPHORUS, INORGANIC", "Phosphorus Serum",
+              "Phosphorus", "INORGANIC PHOSPHORUS"]
+
+  # ------------------------------------------------------ Renal profile -----
+  - canonical: SERUM CREATININE
+    loinc: "2160-0"
+    panel: RFT
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges:
+      - {sex: M, low: 0.7, high: 1.3}
+      - {sex: F, low: 0.6, high: 1.1}
+      - {sex: ANY, low: 0.6, high: 1.3}
+    plausible: {low: 0.1, high: 25.0}
+    aliases: ["CREATININE", "Creatinine", "SERUM CREATININE", "Serum Creatinine",
+              "CREATININE, SERUM", "sr creatinine", "Creatinine Serum"]
+
+  - canonical: BLOOD UREA
+    loinc: "22664-7"
+    panel: RFT
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges: [{sex: ANY, low: 19.0, high: 43.0}]
+    plausible: {low: 2.0, high: 400.0}
+    aliases: ["UREA", "Urea", "BLOOD UREA", "Blood Urea", "UREA, SERUM",
+              "Serum Urea"]
+
+  - canonical: BLOOD UREA NITROGEN
+    loinc: "3094-0"
+    panel: RFT
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges: [{sex: ANY, low: 8.0, high: 23.0}]
+    plausible: {low: 1.0, high: 200.0}
+    aliases: ["BLOOD UREA NITROGEN", "BUN", "Urea Nitrogen (BUN)",
+              "Blood Urea Nitrogen (BUN)"]
+
+  - canonical: URIC ACID
+    loinc: "3084-1"
+    panel: RFT
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges:
+      - {sex: M, low: 3.5, high: 7.2}
+      - {sex: F, low: 2.6, high: 6.0}
+      - {sex: ANY, low: 2.6, high: 7.2}
+    plausible: {low: 0.2, high: 30.0}
+    aliases: ["URIC ACID", "Uric Acid", "URIC ACID, SERUM", "Serum Uric Acid"]
+
+  - canonical: ESTIMATED GFR
+    loinc: "33914-3"
+    panel: RFT
+    dimension: gfr
+    canonical_unit: "mL/min/1.73m2"
+    reference_ranges: [{sex: ANY, low: 90.0, high: null}]
+    plausible: {low: 1.0, high: 200.0}
+    aliases: ["eGFR", "eGFR - ESTIMATED GLOMERULAR FILTRATION RATE",
+              "Estimated Glomerular Filtration Rate (eGFR)",
+              "ESTIMATED GLOMERULAR FILTRATION RATE"]
+
+  # ------------------------------------------------------ Liver profile -----
+  - canonical: BILIRUBIN TOTAL
+    loinc: "1975-2"
+    panel: LFT
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges: [{sex: ANY, low: 0.0, high: 1.2}]
+    plausible: {low: 0.0, high: 60.0}
+    aliases: ["BILIRUBIN TOTAL", "BILIRUBIN, TOTAL", "Total Bilirubin",
+              "TOTAL BILIRUBIN", "Serum Bilirubin (Total)"]
+
+  - canonical: BILIRUBIN DIRECT
+    loinc: "1968-7"
+    panel: LFT
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges: [{sex: ANY, low: 0.0, high: 0.3}]
+    plausible: {low: 0.0, high: 40.0}
+    aliases: ["BILIRUBIN CONJUGATED(DIRECT)", "BILIRUBIN CONJUGATED (DIRECT)",
+              "BILIRUBIN DIRECT", "Direct Bilirubin", "BILIRUBIN, DIRECT"]
+
+  - canonical: BILIRUBIN INDIRECT
+    loinc: "1971-1"
+    panel: LFT
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges: [{sex: ANY, low: 0.1, high: 1.0}]
+    plausible: {low: 0.0, high: 40.0}
+    aliases: ["BILIRUBIN(INDIRECT)", "BILIRUBIN (INDIRECT)",
+              "BILIRUBIN INDIRECT", "Indirect Bilirubin"]
+
+  - canonical: ALANINE AMINOTRANSFERASE
+    loinc: "1742-6"
+    panel: LFT
+    dimension: enzyme_activity
+    canonical_unit: "U/L"
+    reference_ranges: [{sex: ANY, low: null, high: 50.0}]
+    plausible: {low: 0.0, high: 20000.0}
+    aliases: ["ALANINE AMINOTRANSFERASE", "ALT (SGPT)", "ALT", "SGPT",
+              "ALANINE AMINOTRANSFERASE (ALT/SGPT)", "SGPT (ALT)"]
+
+  - canonical: ASPARTATE AMINOTRANSFERASE
+    loinc: "1920-8"
+    panel: LFT
+    dimension: enzyme_activity
+    canonical_unit: "U/L"
+    reference_ranges: [{sex: ANY, low: 17.0, high: 59.0}]
+    plausible: {low: 0.0, high: 20000.0}
+    aliases: ["ASPARTATE AMINOTRANSFERASE", "AST (SGOT)", "AST", "SGOT",
+              "ASPARTATE AMINOTRANSFERASE (AST/SGOT)", "SGOT (AST)"]
+
+  - canonical: AST ALT RATIO
+    loinc: "16325-3"
+    panel: LFT
+    dimension: dimensionless_ratio
+    canonical_unit: "ratio"
+    reference_ranges: [{sex: ANY, low: null, high: 1.15}]
+    plausible: {low: 0.0, high: 50.0}
+    aliases: ["AST (SGOT) / ALT (SGPT) RATIO (DE RITIS)",
+              "AST (SGOT) / ALT (SGPT) RATIO (DERITIS)", "DE RITIS RATIO",
+              "AST/ALT RATIO"]
+
+  - canonical: ALKALINE PHOSPHATASE
+    loinc: "6768-6"
+    panel: LFT
+    dimension: enzyme_activity
+    canonical_unit: "U/L"
+    reference_ranges: [{sex: ANY, low: 38.0, high: 126.0}]
+    plausible: {low: 0.0, high: 5000.0}
+    aliases: ["ALKALINE PHOSPHATASE", "ALP", "Alkaline Phosphatase (ALP)",
+              "ALKALINE PHOSPHATASE (ALP)", "S.ALP"]
+
+  - canonical: PROTEIN TOTAL
+    loinc: "2885-2"
+    panel: LFT
+    dimension: mass_concentration
+    canonical_unit: "g/dL"
+    reference_ranges: [{sex: ANY, low: 6.4, high: 8.3}]
+    plausible: {low: 1.0, high: 15.0}
+    aliases: ["PROTEIN, TOTAL", "PROTEIN,TOTAL", "Total protein",
+              "TOTAL PROTEIN", "Total Protein"]
+
+  - canonical: ALBUMIN
+    loinc: "1751-7"
+    panel: LFT
+    dimension: mass_concentration
+    canonical_unit: "g/dL"
+    reference_ranges: [{sex: ANY, low: 3.5, high: 5.2}]
+    plausible: {low: 0.5, high: 8.0}
+    aliases: ["ALBUMIN", "Albumin", "ALBUMIN, SERUM", "Serum Albumin"]
+
+  - canonical: GLOBULIN
+    loinc: "2336-6"
+    panel: LFT
+    dimension: mass_concentration
+    canonical_unit: "g/dL"
+    reference_ranges: [{sex: ANY, low: 2.0, high: 3.5}]
+    plausible: {low: 0.3, high: 10.0}
+    aliases: ["GLOBULIN", "Globulin", "Globulin (Calculated)", "SERUM GLOBULIN"]
+
+  - canonical: ALBUMIN GLOBULIN RATIO
+    loinc: "1759-0"
+    panel: LFT
+    dimension: dimensionless_ratio
+    canonical_unit: "ratio"
+    reference_ranges: [{sex: ANY, low: 1.0, high: 2.1}]
+    plausible: {low: 0.05, high: 20.0}
+    aliases: ["A/G RATIO", "Albumin/Globulin Ratio",
+              "Albumin/Globulin Ratio (Calculated)", "AG RATIO"]
+
+  # -------------------------------------------------- Pancreatic / other ----
+  - canonical: AMYLASE
+    loinc: "1798-8"
+    panel: PANCREATIC
+    dimension: enzyme_activity
+    canonical_unit: "U/L"
+    reference_ranges: [{sex: ANY, low: 25.0, high: 125.0}]
+    plausible: {low: 0.0, high: 10000.0}
+    aliases: ["AMYLASE", "Amylase", "AMYLASE, SERUM", "Serum Amylase"]
+
+  - canonical: LIPASE
+    loinc: "3040-3"
+    panel: PANCREATIC
+    dimension: enzyme_activity
+    canonical_unit: "U/L"
+    reference_ranges: [{sex: ANY, low: 13.0, high: 60.0}]
+    plausible: {low: 0.0, high: 20000.0}
+    aliases: ["LIPASE", "LIPASE,SERUM", "LIPASE, SERUM", "Lipase"]
+
+  - canonical: C-REACTIVE PROTEIN
+    loinc: "1988-5"
+    panel: INFLAMMATORY
+    dimension: mass_concentration
+    canonical_unit: "mg/L"
+    reference_ranges: [{sex: ANY, low: 0.0, high: 6.0}]
+    plausible: {low: 0.0, high: 600.0}
+    aliases: ["C-REACTIVE PROTEIN", "CRP", "C-REACTIVE PROTEIN (CRP)",
+              "CRP-QUANTITATIVE", "CRP QUANTITATIVE"]
+
+  - canonical: PROCALCITONIN
+    loinc: "33959-8"
+    panel: INFLAMMATORY
+    dimension: mass_concentration
+    canonical_unit: "ng/mL"
+    reference_ranges: [{sex: ANY, low: 0.0, high: 0.5}]
+    plausible: {low: 0.0, high: 1000.0}
+    aliases: ["PROCALCITONIN", "PROCALCITONIN (PCT)", "PCT", "Procalcitonin"]
+
+  - canonical: RANDOM BLOOD SUGAR
+    loinc: "2345-7"
+    panel: METABOLIC
+    dimension: mass_concentration
+    canonical_unit: "mg/dL"
+    reference_ranges: [{sex: ANY, low: 70.0, high: 140.0}]
+    plausible: {low: 10.0, high: 1500.0}
+    aliases: ["RBS", "RANDOM BLOOD SUGAR", "BLOOD SUGAR RANDOM", "GLUCOSE",
+              "Blood Sugar Random", "BSR", "Random Blood Sugar"]
+
+  # ------------------------------------------------------------ Vitals -----
+  - canonical: BODY TEMPERATURE
+    loinc: "8310-5"
+    panel: VITALS
+    dimension: temperature
+    canonical_unit: "degC"
+    reference_ranges: [{sex: ANY, low: 36.1, high: 37.5}]
+    plausible: {low: 25.0, high: 45.0}
+    aliases: ["Temp", "TEMP", "Temperature", "TEMPERATURE", "Body Temperature"]
+
+  - canonical: PULSE RATE
+    loinc: "8867-4"
+    panel: VITALS
+    dimension: rate_per_minute
+    canonical_unit: "/min"
+    reference_ranges: [{sex: ANY, low: 60.0, high: 100.0}]
+    plausible: {low: 20.0, high: 300.0}
+    aliases: ["Pulse", "PULSE", "Pulse Rate", "PR", "Heart Rate", "HR",
+              "Heart Rate®"]
+
+  - canonical: RESPIRATORY RATE
+    loinc: "9279-1"
+    panel: VITALS
+    dimension: rate_per_minute
+    canonical_unit: "/min"
+    reference_ranges: [{sex: ANY, low: 12.0, high: 20.0}]
+    plausible: {low: 4.0, high: 80.0}
+    aliases: ["RR", "Respiratory Rate", "RESP RATE", "Resp"]
+
+  - canonical: OXYGEN SATURATION
+    loinc: "2708-6"
+    panel: VITALS
+    dimension: fraction
+    canonical_unit: "%"
+    reference_ranges: [{sex: ANY, low: 95.0, high: 100.0}]
+    plausible: {low: 20.0, high: 100.0}
+    aliases: ["SPO2", "SpO2", "Spo2", "OXYGEN SATURATION", "O2 Sat"]
+
+  - canonical: BLOOD PRESSURE SYSTOLIC
+    loinc: "8480-6"
+    panel: VITALS
+    dimension: pressure
+    canonical_unit: "mmHg"
+    reference_ranges: [{sex: ANY, low: 90.0, high: 130.0}]
+    plausible: {low: 40.0, high: 300.0}
+    aliases: ["BP SYSTOLIC", "Systolic BP", "SBP"]
+    derived_from: {test: "BLOOD PRESSURE", component: 0}
+
+  - canonical: BLOOD PRESSURE DIASTOLIC
+    loinc: "8462-4"
+    panel: VITALS
+    dimension: pressure
+    canonical_unit: "mmHg"
+    reference_ranges: [{sex: ANY, low: 60.0, high: 85.0}]
+    plausible: {low: 20.0, high: 200.0}
+    aliases: ["BP DIASTOLIC", "Diastolic BP", "DBP"]
+    derived_from: {test: "BLOOD PRESSURE", component: 1}
+
+  # A compound test: one source row yields two canonical rows. The splitter
+  # lives in standardise/numeric.py; the catalogue only declares the shape.
+  - canonical: BLOOD PRESSURE
+    loinc: "85354-9"
+    panel: VITALS
+    dimension: pressure
+    canonical_unit: "mmHg"
+    value_type: compound
+    compound_split: {separator: "/", components: ["BLOOD PRESSURE SYSTOLIC",
+                                                  "BLOOD PRESSURE DIASTOLIC"]}
+    plausible: {low: 20.0, high: 300.0}
+    aliases: ["BP", "Blood Pressure", "BLOOD PRESSURE", "B.P."]
+
+  - canonical: BODY WEIGHT
+    loinc: "29463-7"
+    panel: VITALS
+    dimension: mass
+    canonical_unit: "kg"
+    reference_ranges: []
+    plausible: {low: 0.5, high: 400.0}
+    aliases: ["Weight", "WEIGHT", "Body Weight", "Wt"]
+
+  # ------------------------------------------- Qualitative / serology ------
+  - canonical: WIDAL TEST
+    loinc: "22487-3"
+    panel: SEROLOGY
+    dimension: titre
+    canonical_unit: "titre"
+    value_type: qualitative
+    qualitative_values: ["POSITIVE", "NEGATIVE", "REACTIVE", "NON REACTIVE",
+                         "EQUIVOCAL"]
+    aliases: ["WIDAL TEST", "WIDAL TEST (SLIDE METHOD)", "WIDAL", "Widal Test"]
+
+  - canonical: DENGUE NS1 ANTIGEN
+    loinc: "7855-5"
+    panel: SEROLOGY
+    dimension: qualitative
+    canonical_unit: "qualitative"
+    value_type: qualitative
+    qualitative_values: ["POSITIVE", "NEGATIVE", "EQUIVOCAL"]
+    aliases: ["DENGUE NS 1", "DENGUE NS1", "DENGUE NS1 ANTIGEN", "NS1 ANTIGEN"]
+
+  - canonical: TYPHIDOT IGG IGM
+    loinc: "51822-7"
+    panel: SEROLOGY
+    dimension: qualitative
+    canonical_unit: "qualitative"
+    value_type: qualitative
+    qualitative_values: ["POSITIVE", "NEGATIVE", "EQUIVOCAL"]
+    aliases: ["TYPHI DOT IGG & IGM", "TYPHIDOT IgG AND IgM , SERUM",
+              "TYPHIDOT IGG AND IGM", "TYPHIDOT"]
+
+  - canonical: MALARIA ANTIGEN
+    loinc: "51587-6"
+    panel: SEROLOGY
+    dimension: qualitative
+    canonical_unit: "qualitative"
+    value_type: qualitative
+    qualitative_values: ["POSITIVE", "NEGATIVE", "NOT DETECTED", "DETECTED"]
+    aliases: ["MALARIA VIVAX ANTIGEN , WHOLE BLOOD EDTA",
+              "MALARIA FALCIPARUM ANTIGEN , WHOLE BLOOD EDTA",
+              "PERIPHERAL SMEAR FOR MALARIAL PARASITE (MP) , WHOLE BLOOD EDTA",
+              "MALARIA ANTIGEN", "MP SMEAR"]
+
+  - canonical: URINE PROTEIN
+    loinc: "2888-6"
+    panel: URINE
+    dimension: qualitative
+    canonical_unit: "qualitative"
+    value_type: qualitative
+    qualitative_values: ["NIL", "TRACE", "1+", "2+", "3+", "4+", "NEGATIVE",
+                         "PRESENT", "ABSENT"]
+    aliases: ["PROTEIN (ALBUMIN)", "URINE PROTEIN", "Urine Protein", "ALBUMIN URINE"]
+
+  - canonical: URINE KETONES
+    loinc: "2514-8"
+    panel: URINE
+    dimension: qualitative
+    canonical_unit: "qualitative"
+    value_type: qualitative
+    qualitative_values: ["NEGATIVE", "POSITIVE", "TRACE", "NIL"]
+    aliases: ["KETONE BODIES", "URINE KETONES (RANDOM)", "URINE KETONES",
+              "Ketone Bodies"]
+
+  - canonical: URINE PH
+    loinc: "5803-2"
+    panel: URINE
+    dimension: dimensionless_ratio
+    canonical_unit: "ratio"
+    reference_ranges: [{sex: ANY, low: 4.6, high: 8.0}]
+    plausible: {low: 3.0, high: 10.0}
+    aliases: ["pH", "PH", "Urine pH", "URINE PH"]
+
+  - canonical: URINE SPECIFIC GRAVITY
+    loinc: "5811-5"
+    panel: URINE
+    dimension: dimensionless_ratio
+    canonical_unit: "ratio"
+    reference_ranges: [{sex: ANY, low: 1.005, high: 1.030}]
+    plausible: {low: 1.0, high: 1.1}
+    aliases: ["SP. GRAVITY", "SPECIFIC GRAVITY", "Sp. Gravity", "SP GRAVITY"]
+
+# ---------------------------------------------------------------------------
+# Rows whose `test_name` is not a test at all. Matching one of these patterns
+# routes the row to the dead-letter store with a precise reason instead of
+# polluting the review queue with noise an analyst cannot action.
+# ---------------------------------------------------------------------------
+non_test_patterns:
+  - pattern: "^(test_name|result|range|unit|page_no)$"
+    reason: header_row_leaked
+  - pattern: "^Comment$"
+    reason: narrative_comment
+  - pattern: "^(DIAGNOSTICS|BIOCHEMICAL EXAMINATION|CENTRIFUGED SEDIMENT WET MOUNT AND MICROSCOPY)$"
+    reason: section_heading
+  # Panel names, not analytes. Left unmatched they fuzzy-resolve to whichever
+  # member test they most resemble, and the value printed beside the heading -
+  # which belongs to the panel's first analyte - is then attributed to the
+  # wrong test. Naming them explicitly is what turns that silent error into a
+  # dead-letter row with the reason `panel_heading`.
+  - pattern: "^(COMPLETE BLOOD COUNT|CBC)\\b"
+    reason: panel_heading
+  - pattern: "^(DIFFERENTIAL LEUCOCYTIC COUNT|DIFFERENTIAL LEUKOCYTE COUNTS?|DIFFERENTIAL COUNT)\\b"
+    reason: panel_heading
+  - pattern: "^(RBC INDICES|PLATELET INDICES|RED CELL INDICES)\\b"
+    reason: panel_heading
+  - pattern: "^(LIVER FUNCTION TEST|LFT)\\b.*(SERUM|\\(LFT\\)|TEST)"
+    reason: panel_heading
+  - pattern: "^(RENAL PROFILE|KIDNEY FUNCTION TEST|RFT|KFT)\\s*[/(]"
+    reason: panel_heading
+  - pattern: "^(COMPLETE URINE EXAMINATION|CUE)\\b"
+    reason: panel_heading
+  - pattern: "^(WIDAL TEST \\(SLIDE METHOD\\))$"
+    reason: panel_heading
+  - pattern: "^(NEGATIVE|ABSENT|POSITIVE|NIL|PRESENT)$"
+    reason: value_in_name_column
+  - pattern: "Patient Name:"
+    reason: pii_header_leaked
+  - pattern: "^(USG|ULTRASOUND|X-?RAY|CT |MRI |ECG|ECHO)"
+    reason: imaging_narrative
+  - pattern: "^CULTURE AND SENSITIVITY"
+    reason: microbiology_narrative

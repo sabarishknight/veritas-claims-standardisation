@@ -1,0 +1,245 @@
+# ---------------------------------------------------------------------------
+# Unit dimensions and conversion factors  (FR-2.4 Unit Harmonisation)
+#
+# MODEL
+#   Every unit belongs to exactly one *dimension*. Within a dimension, each
+#   unit declares how to reach the dimension's `base_unit`:
+#
+#       value_base = (value - offset) * factor
+#
+#   A test in test_catalog.yaml declares a `canonical_unit`, which must belong
+#   to the test's dimension. Conversion is therefore two hops:
+#
+#       base      = (v - offset_src) * factor_src
+#       canonical = base / factor_canonical + offset_canonical
+#
+#   Two hops (rather than an N*N conversion matrix) means adding a new unit is
+#   one line, and it keeps per-test display scale independent of the maths:
+#   an RBC count stays "4.7 mil/cu.mm" while a WBC count stays
+#   "7200 cells/cu.mm", yet both are comparable after conversion to the base.
+#
+#   `offset` supports affine scales (degF -> degC). It defaults to 0.
+#
+# WHY A DIMENSION AT ALL
+#   The dimension is not bookkeeping: it is the safety check. A row whose test
+#   name resolves to HAEMOGLOBIN (mass_concentration) but whose unit is
+#   `cell/cu.mm` (count_per_volume) is not a unit problem to be converted - it
+#   is a corrupt row. See validate/coherence.py. Sample_JSON_file2 contains 8
+#   such rows; they are quarantined, never converted.
+#
+# OCR VARIANTS
+#   Source units arrive from OCR of lab PDFs, so `FI` (fL), `UIL` (U/L) and
+#   `gm/di` (gm/dL) appear in real traffic. They are listed as ordinary unit
+#   spellings - a misread unit is still a known unit, and refusing to read it
+#   would discard a valid result. Variants that are *not* units at all
+#   (`Expertise. Empowering you.` - a page footer; `atelet Count` - the test
+#   name leaking into the unit column) are deliberately absent, so they fall
+#   through to `unit_unrecognised` and are flagged rather than guessed.
+# ---------------------------------------------------------------------------
+version: 4
+
+dimensions:
+
+  mass_concentration:
+    base_unit: "g/dL"
+    units:
+      "g/dL": 1.0
+      "g/dl": 1.0
+      "G/DL": 1.0
+      "gm/dL": 1.0
+      "gm/dl": 1.0
+      "gm%": 1.0
+      "g%": 1.0
+      "gm/di": 1.0          # OCR: 'l' read as 'i'
+      "gms/dl": 1.0
+      "g/100ml": 1.0
+      "mg/dL": 0.001
+      "mg/dl": 0.001
+      "MG/DL": 0.001
+      "mgs/dl": 0.001
+      "mg%": 0.001
+      "mg/L": 0.0001
+      "mg/l": 0.0001
+      "ug/dL": 0.000001
+      "mcg/dL": 0.000001
+      "ng/mL": 0.0000001
+      "g/L": 0.1
+      "gm/L": 0.1
+
+  count_per_volume:
+    base_unit: "cells/cu.mm"
+    units:
+      "cells/cu.mm": 1.0
+      "cell/cu.mm": 1.0
+      "Cells/cu.mm": 1.0
+      "cells/cumm": 1.0
+      "cells/cmm": 1.0
+      "cell/cmm": 1.0
+      "/cu.mm": 1.0
+      "/cumm": 1.0
+      "cu.mm": 1.0
+      "cells/uL": 1.0
+      "cells/ul": 1.0
+      "/uL": 1.0
+      "thou/cu.mm": 1000.0
+      "thousand/cu.mm": 1000.0
+      "10^3/uL": 1000.0
+      "lac/cmm": 100000.0        # Indian lab convention: 1 lakh = 10^5
+      "lacs/cmm": 100000.0
+      "lakh/cumm": 100000.0
+      "lakhs/cumm": 100000.0
+      "lac/cu.mm": 100000.0
+      "mil/cu.mm": 1000000.0
+      "mill/cu.mm": 1000000.0
+      "mil/cu.cm": 1000000.0     # FR-2.4 worked example: cu.mm vs cu.cm
+      "million/cu.mm": 1000000.0
+      "Million/cu.mm": 1000000.0
+      "million/cumm": 1000000.0
+      "mill/cumm": 1000000.0
+      "10^6/uL": 1000000.0
+
+  fraction:
+    base_unit: "%"
+    units:
+      "%": 1.0
+      "percent": 1.0
+      "pct": 1.0
+      "ratio_fraction": 100.0    # 0.45 -> 45 %
+
+  cell_volume:
+    base_unit: "fL"
+    units:
+      "fL": 1.0
+      "fl": 1.0
+      "FL": 1.0
+      "femtolitre": 1.0
+      "FI": 1.0                  # OCR: 'fL' read as 'FI'
+      "IL": 1.0                  # OCR: 'fL' read as 'IL'
+      "cu.microns": 1.0
+
+  cell_mass:
+    base_unit: "pg"
+    units:
+      "pg": 1.0
+      "PG": 1.0
+      "pgm": 1.0
+      "picogram": 1.0
+
+  substance_concentration:
+    base_unit: "mmol/L"
+    units:
+      "mmol/L": 1.0
+      "mmol/l": 1.0
+      "mEq/L": 1.0               # valid for monovalent ions (Na+, K+, Cl-)
+      "meq/L": 1.0
+      "mEq/l": 1.0
+      "umol/L": 0.001
+      "mol/L": 1000.0
+
+  enzyme_activity:
+    base_unit: "U/L"
+    units:
+      "U/L": 1.0
+      "U/l": 1.0
+      "u/L": 1.0
+      "IU/L": 1.0
+      "UI/L": 1.0
+      "UIL": 1.0                 # OCR: '/' lost
+      "UA": 1.0                  # OCR: 'U/L' mangled
+      "U/ml": 1000.0
+
+  dimensionless_ratio:
+    base_unit: "ratio"
+    units:
+      "ratio": 1.0
+      "Ratio": 1.0
+      "RATIO": 1.0
+      "index": 1.0
+      # NOTE: the empty string is deliberately NOT a unit here. A blank unit
+      # column means "the source did not say", which is a different fact from
+      # "this quantity is dimensionless". Treating blank as dimensionless made
+      # every blank-unit row fail the coherence dimension check against its own
+      # test - 64 false findings in one sample file. Blank now resolves to no
+      # dimension, which the coherence engine correctly reads as "no evidence".
+
+  gfr:
+    base_unit: "mL/min/1.73m2"
+    units:
+      "mL/min/1.73m2": 1.0
+      "ml/min/1.73m2": 1.0
+      "mL/min/1.73 m2": 1.0
+      "mL/min": 1.0              # assumed already BSA-indexed; see assumptions
+
+  temperature:
+    base_unit: "degC"
+    units:
+      "degC": {factor: 1.0}
+      "C": {factor: 1.0}
+      "degree C": {factor: 1.0}
+      "degF": {factor: 0.5555555556, offset: 32.0}
+      "F": {factor: 0.5555555556, offset: 32.0}
+      "degree F": {factor: 0.5555555556, offset: 32.0}
+
+  pressure:
+    base_unit: "mmHg"
+    units:
+      "mmHg": 1.0
+      "mm Hg": 1.0
+      "mmhg": 1.0
+
+  rate_per_minute:
+    base_unit: "/min"
+    units:
+      "/min": 1.0
+      "min": 1.0
+      "bpm": 1.0
+      "per min": 1.0
+
+  mass:
+    base_unit: "kg"
+    units:
+      "kg": 1.0
+      "Kg": 1.0
+      "KG": 1.0
+      "g": 0.001
+      "gm": 0.001
+
+  volume:
+    base_unit: "mL"
+    units:
+      "mL": 1.0
+      "ml": 1.0
+      "ML": 1.0
+      "L": 1000.0
+
+  titre:
+    base_unit: "titre"
+    units:
+      "titre": 1.0
+      "AGGLUTINATION": 1.0
+      "Od Units": 1.0
+      "COI": 1.0
+
+  qualitative:
+    base_unit: "qualitative"
+    units:
+      "qualitative": 1.0
+      "ICT": 1.0
+      "/hpf": 1.0
+      "hpf": 1.0
+
+# Spellings seen in the `unit` column that are NOT units. Recognised here only
+# so the pipeline can emit a precise reason code instead of `unit_unrecognised`.
+# Keeping them visible in config (rather than buried in code) means an ops
+# analyst can add tomorrow's OCR artefact without a deploy.
+non_unit_tokens:
+  - "unit"                          # header row leaked into the data
+  - "NIL"
+  - "VIL"
+  - "NEGATIVE"
+  - "NOT DETECTED"
+  - "ABSENT"
+  - "Expertise. Empowering you."    # lab letterhead strapline
+  - "atelet Count"                  # test name leaked into unit column
+  - "0-3"                           # reference range leaked into unit column
+  - "0-1"

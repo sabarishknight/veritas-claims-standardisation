@@ -1,0 +1,43 @@
+{
+  "files": 8000,
+  "rows_per_file": 150,
+  "workers": 4,
+  "generate_seconds": 8.56,
+  "run_seconds": 120.96,
+  "files_per_second": 66.1,
+  "rows_per_second": 9879.0,
+  "rows_emitted": 1194996,
+  "documents_emitted": 15984,
+  "errors_emitted": 8,
+  "bytes_total": 156868167,
+  "mean_file_bytes": 19608.5,
+  "cpu_seconds_per_file": 0.06054,
+  "sink": "none",
+  "projection": {
+    "daily_files": 200000,
+    "measured_files_per_second_total": 66.1,
+    "measured_files_per_second_per_worker": 16.5,
+    "cpu_seconds_per_file": 0.06054,
+    "steady_arrival_files_per_second": 2.31,
+    "workers_needed_steady": 1,
+    "workers_needed_2x_burst": 1,
+    "seconds_to_process_a_full_day_at_measured_rate": 3027.1,
+    "daily_ingest_gib": 3.65,
+    "monthly_usd": {
+      "cloud_run_compute": 9.63,
+      "cloud_run_requests": 2.4,
+      "gcs_operations": 30.0,
+      "pubsub": 4.28,
+      "gcs_storage": 2.52,
+      "bigquery_storage": 1.31,
+      "total": 50.14
+    },
+    "price_assumptions_usd": {
+      "cloud_run_vcpu_second": 2.4e-05,
+      "cloud_run_gib_second": 2.5e-06,
+      "worker_memory_gib": 1.0,
+      "pubsub_per_tib": 40.0,
+      "note": "Google Cloud list prices, asia-south1, at time of writing. BigQuery load jobs are free, which is why the pipeline uses load jobs rather than the Storage Write API."
+    }
+  }
+}

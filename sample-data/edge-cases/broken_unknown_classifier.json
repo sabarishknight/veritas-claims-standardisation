@@ -1,0 +1,69 @@
+{
+ "traceId": "d3b3a23351d942578a6bdec5ce885a74",
+ "statusCode": "200",
+ "message": [
+  "Success"
+ ],
+ "data": {
+  "responseDetails": [
+   {
+    "classifier": "radiology_report",
+    "data": {
+     "impression": "No acute abnormality.",
+     "modality": "CT"
+    },
+    "status": "success",
+    "errorMessage": null,
+    "fileId": null
+   },
+   {
+    "classifier": "lab_report",
+    "data": {
+     "basic_info": {
+      "patient_name": "Partial Success",
+      "reports_date": "15-10-2025"
+     },
+     "report_details": [
+      {
+       "page_no": 0,
+       "range": "135-145",
+       "result": "141",
+       "test_analytics": "",
+       "test_name": "SODIUM",
+       "unit": "mmol/L"
+      }
+     ]
+    },
+    "status": "success",
+    "errorMessage": null,
+    "fileId": null
+   }
+  ],
+  "correlationId": "d5ce90c92d58476b9c02b0b757ea731a",
+  "documentId": "DOC8149F2DC2F1A4D228A993F8604",
+  "metaDetails": [
+   {
+    "key": "DestinationIdentifier",
+    "value": "stg-datalake"
+   },
+   {
+    "key": "claim_no",
+    "value": "CLAIM-E09BDF29"
+   },
+   {
+    "key": "nt_code",
+    "value": "NT-SYNTH"
+   },
+   {
+    "key": "source_system",
+    "value": "FASTTRACK"
+   },
+   {
+    "key": "ConsumerClientId",
+    "value": "a654634e-d203-4fa5-9adb-b05a15e6608d"
+   }
+  ],
+  "status": true,
+  "message": null
+ }
+}

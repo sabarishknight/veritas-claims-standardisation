@@ -1,0 +1,168 @@
+{
+ "traceId": "ac8b65f068314a36ae062663a5ea707c",
+ "statusCode": "200",
+ "message": [
+  "Success"
+ ],
+ "data": {
+  "responseDetails": [
+   {
+    "classifier": "lab_report",
+    "data": {
+     "basic_info": {
+      "uhid": "SYN-0001",
+      "age": "41 Years",
+      "bill_date": "12-10-2025",
+      "gender": "M",
+      "lab_or_hospital_name": "Synthetic Diagnostics",
+      "patient_name": "Test Patient",
+      "reports_date": "12-10-2025"
+     },
+     "report_details": [
+      {
+       "page_no": 0,
+       "range": "13-17",
+       "result": "13.7",
+       "test_analytics": "",
+       "test_name": "Haemoglobin",
+       "unit": "g/dL"
+      },
+      {
+       "page_no": 0,
+       "range": "13-17",
+       "result": "13.7",
+       "test_analytics": "",
+       "test_name": "Haemoglobin",
+       "unit": "gm/dl"
+      },
+      {
+       "page_no": 0,
+       "range": "13-17",
+       "result": "13.7",
+       "test_analytics": "",
+       "test_name": "Haemoglobin",
+       "unit": "gm/di"
+      },
+      {
+       "page_no": 0,
+       "range": "130-170",
+       "result": "137",
+       "test_analytics": "",
+       "test_name": "Haemoglobin",
+       "unit": "mg/dL"
+      },
+      {
+       "page_no": 0,
+       "range": "4.5-5.5",
+       "result": "4.74",
+       "test_analytics": "",
+       "test_name": "RBC COUNT",
+       "unit": "mil/cu.mm"
+      },
+      {
+       "page_no": 0,
+       "range": "4.5-5.5",
+       "result": "4.74",
+       "test_analytics": "",
+       "test_name": "RBC COUNT",
+       "unit": "mil/cu.cm"
+      },
+      {
+       "page_no": 0,
+       "range": "4.5-5.5",
+       "result": "4.74",
+       "test_analytics": "",
+       "test_name": "RBC COUNT",
+       "unit": "Million/cu.mm"
+      },
+      {
+       "page_no": 0,
+       "range": "150000-410000",
+       "result": "190000",
+       "test_analytics": "",
+       "test_name": "PLATELET COUNT",
+       "unit": "cells/cu.mm"
+      },
+      {
+       "page_no": 0,
+       "range": "1.5-4.1",
+       "result": "1.90",
+       "test_analytics": "",
+       "test_name": "PLATELET COUNT",
+       "unit": "lakhs/cumm"
+      },
+      {
+       "page_no": 0,
+       "range": "1.5-4.1",
+       "result": "1.90",
+       "test_analytics": "",
+       "test_name": "PLATELET COUNT",
+       "unit": "lac/cmm"
+      },
+      {
+       "page_no": 0,
+       "range": "8.1-13.9",
+       "result": "10.5",
+       "test_analytics": "",
+       "test_name": "MPV",
+       "unit": "FI"
+      },
+      {
+       "page_no": 0,
+       "range": "38-126",
+       "result": "96",
+       "test_analytics": "",
+       "test_name": "ALKALINE PHOSPHATASE",
+       "unit": "UIL"
+      },
+      {
+       "page_no": 0,
+       "range": "",
+       "result": "98.6",
+       "test_analytics": "",
+       "test_name": "Temp",
+       "unit": "degree F"
+      },
+      {
+       "page_no": 0,
+       "range": "",
+       "result": "37.0",
+       "test_analytics": "",
+       "test_name": "Temp",
+       "unit": "degC"
+      }
+     ]
+    },
+    "status": "success",
+    "errorMessage": null,
+    "fileId": null
+   }
+  ],
+  "correlationId": "496c23e71cce4dbf9735c3ff84abcd57",
+  "documentId": "DOC7F762377C07943219E8439DF38",
+  "metaDetails": [
+   {
+    "key": "DestinationIdentifier",
+    "value": "stg-datalake"
+   },
+   {
+    "key": "claim_no",
+    "value": "CLAIM-UNITS-ZOO"
+   },
+   {
+    "key": "nt_code",
+    "value": "NT-SYNTH"
+   },
+   {
+    "key": "source_system",
+    "value": "FASTTRACK"
+   },
+   {
+    "key": "ConsumerClientId",
+    "value": "004570e7-dc71-4d70-8d3f-aec00c3341ed"
+   }
+  ],
+  "status": true,
+  "message": null
+ }
+}

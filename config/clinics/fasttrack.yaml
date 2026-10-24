@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# Source profile: FASTTRACK   (observed in Sample_JSON_file 1-4)
+#
+# Inherits every unset key from _default.yaml, so a profile stays small and
+# states only what is genuinely different about this source.
+#
+# WHAT IS SPECIFIC HERE
+#   `test_analytics` is not one field in this source - it carries two different
+#   things depending on which lab within the network produced the page:
+#     file 2: "normal"            -> an interpretation (and wrong 3 times in 18)
+#     file 4: "Direct ISE",
+#             "Flow cytometry"    -> the assay *method*
+#   Declaring it `mixed` tells the pipeline to sniff per row: a value in the
+#   interpretation vocabulary lands in `source_interpretation`, anything else
+#   lands in `assay_method`. Neither is ever used to classify a result.
+#   See docs/data-profile.md F-3.
+# ---------------------------------------------------------------------------
+clinic_id: FASTTRACK
+schema_version: "2025.10"
+inherits: _default
+priority: 10
+match:
+  source_system: FASTTRACK
+
+documents:
+  lab_report:
+    source_interpretation_semantics: mixed
+    interpretation_vocabulary: [normal, low, high, abnormal,
+                                "low/normal/high", present, absent]
+
+dedup:
+  # This source resubmits the same discharge summary under a fresh documentId
+  # and a fresh claim_no (files 1 and 3 are byte-identical payloads with
+  # different IDs), so identity-based dedup does not work here.
+  strategy: content_hash
+
+quality_expectations:
+  # Thresholds for this source's SLO panel in the ops UI. A source that
+  # degrades past these is a conversation with the clinic, not a code change.
+  max_unmapped_test_rate: 0.05
+  max_invalid_row_rate: 0.10
+  max_duplicate_rate: 0.20

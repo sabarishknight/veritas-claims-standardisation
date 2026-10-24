@@ -1,0 +1,22 @@
+sequenceDiagram
+  autonumber
+  participant C as New clinic
+  participant E as Data engineer
+  participant P as Pipeline
+  participant U as Ops UI
+
+  C->>P: first files arrive (no profile exists)
+  P->>P: _default profile applies<br/>schema-on-read
+  P->>U: rows load, tagged clinic_profile=_default
+  Note over U: "unprofiled source" volume<br/>is the trigger, not an outage
+
+  E->>P: python -m veritas onboard sample.json
+  P-->>E: coverage report:<br/>fields read vs fields NOT read
+  E->>E: map each unread field, or<br/>record the decision to drop it
+  E->>P: commit config/clinics/<new>.yaml
+  Note over E,P: config change only —<br/>no code, no deploy, no migration
+
+  P->>U: subsequent files use the new profile
+  U-->>E: unmapped-test review queue
+  E->>P: accept → promoted to learned_alias
+  Note over P: each novel spelling is paid for<br/>once, then free forever (NFR-4.1)

@@ -1,0 +1,141 @@
+# ---------------------------------------------------------------------------
+# Pipeline behaviour. Every threshold that changes an outcome lives here, so a
+# tuning decision is reviewable in a pull request rather than buried in code.
+# ---------------------------------------------------------------------------
+version: 5
+
+resolver:
+  # Tiered test-name resolution. Each tier is cheaper and more certain than the
+  # next; a name only descends if the tier above it cannot answer.
+  #   T0 exact / alias      -> confidence 1.00   method=exact|alias
+  #   T1 normalised string  -> confidence 0.97   method=normalised
+  #   T2 fuzzy              -> confidence = score, method=fuzzy
+  #   T3 LLM (tail only)    -> confidence 0.80 capped, method=llm
+  #   T4 unresolved         -> confidence 0.00,  method=unmapped  -> review queue
+  fuzzy_accept_threshold: 0.86      # >= this is accepted automatically
+  fuzzy_review_threshold: 0.70      # between the two: accepted but queued
+  affix_tolerance: 3                # chars an OCR crop may remove from either
+                                    # end before a candidate is rejected; this
+                                    # is what resolves "aemoglobin", "atelet
+                                    # Count", "eutrophils"
+  max_candidates: 5                 # alternatives recorded for the reviewer
+
+llm:
+  # GenAI is used for the *unresolved tail only*, and every answer is cached as
+  # a learned alias, so a novel spelling costs one call ever.
+  #
+  # Cost of the alternative, for the record: classifying all ~30M rows/day with
+  # an LLM would be ~$450/day. The tail is ~2k novel names on day one, decaying
+  # as the alias table learns, which is under $1/day. Same accuracy where it
+  # matters, four orders of magnitude cheaper. docs/cost-model.md has the
+  # workings.
+  enabled: true
+  provider: gemini                  # gemini | stub
+  model: "gemini-2.5-flash"
+  stub_when_unauthenticated: true   # offline runs stay deterministic
+  max_calls_per_run: 200            # hard cost ceiling per run
+  min_confidence_to_accept: 0.75
+  cache_table: learned_alias
+  batch_size: 20
+  timeout_seconds: 20
+  # Second use of GenAI: pulling values out of names like
+  # "LFT ( SGOT - 38, SGPT -14, ALP - 127)". Deterministic regex handles the
+  # common shapes; the LLM only sees what regex could not split.
+  extract_embedded_values: true
+
+coherence:
+  # The safety net. A resolved name is only trusted if the row's unit and
+  # reference range are consistent with what that test must look like.
+  enabled: true
+  require_dimension_match: true
+  # Multiplier (not an additive span) applied to a test's plausible envelope
+  # before judging whether an observed reference range could belong to that
+  # test. A multiplier is the right model because analyte magnitudes differ by
+  # six orders between a platelet count and a bilirubin, so additive slack
+  # that suits one is meaningless for the other. At 2.0 a lab may use a range
+  # twice as wide as our envelope in either direction before we doubt the row.
+  range_envelope_tolerance: 2.0
+  # Report-level misalignment detection.
+  misalignment:
+    enabled: true
+    min_failing_rows: 3             # below this it is bad rows, not bad layout
+    min_failing_fraction: 0.25
+    probe_offsets: [-2, -1, 1, 2]   # shifts to test for a better explanation
+    min_offset_support: 2           # rows that must cohere at the offset
+    # Of the failing rows where the shift hypothesis is *testable* (the
+    # neighbour at that offset resolved to a known test), this fraction must
+    # cohere. Rows whose neighbour is unmapped are excluded rather than counted
+    # as misses - they are absence of evidence, not evidence against.
+    min_offset_explains_fraction: 0.5
+    action: quarantine_report       # quarantine | flag_only
+    # We never silently realign. The proposed offset is recorded for a human to
+    # accept in the review queue, because a wrong realignment writes a
+    # plausible-looking wrong value into a claim decision.
+    auto_correct: false
+
+validation:
+  outlier_method: plausible_envelope   # plausible_envelope | robust_z | both
+  robust_z_threshold: 6.0
+  # A result that equals its own reference range verbatim ("1.5-4.5" in both
+  # columns) is a column-collapse artefact, not a value.
+  reject_result_equals_range: true
+  reject_unit_equals_test_name: true
+  ocr_garbage_tokens: ["OTE", "NOTE", "VIL", "N/A", "NA", "-", "--", "?"]
+
+dedup:
+  # Default strategy. Overridable per clinic profile.
+  #   content_hash  - SHA-256 over the normalised clinical payload. Catches the
+  #                   same report resubmitted with a fresh documentId, which is
+  #                   what actually happens (files 1 and 3).
+  #   document_id   - trusts the source's identifier. Cheaper, and wrong here.
+  #   composite_key - patient + encounter dates + document type.
+  strategy: content_hash
+  content_hash_excludes: [traceId, correlationId, documentId, claim_no,
+                          nt_code, ingested_at, file_gcs_path]
+  # Repeat panels inside one report (file 4 repeats some tests 6x across pages)
+  # are collapsed on (test, result, range, unit); genuine serial draws survive
+  # because their results differ, and occurrence_index preserves the order.
+  collapse_repeat_rows_within_report: true
+  keep_first_on_collapse: true
+
+audit:
+  # FR-4.3 audit trail. In production the authoritative copy of the raw payload
+  # is the object already sitting in GCS, and `file_uri` + `source_row_index`
+  # on every row points straight at it - so retaining a second copy inside the
+  # warehouse roughly doubles storage for data that is already durable.
+  #
+  # It is retained here anyway, because the record inspector has to show the
+  # clinic's raw JSON beside the standardised output without a GCS round trip,
+  # and because an auditor who cannot see the input next to the output does not
+  # really have an audit trail. At production volume set this to false and let
+  # the UI fetch from GCS on demand; the trade-off is documented in
+  # docs/assumptions.md D-11.
+  retain_raw_payload: true
+  max_raw_payload_bytes: 262144      # 256 KiB; larger payloads store a pointer
+
+pii:
+  # Samples arrive pre-redacted ("[PATIENT NAME REDACTED]"), so tokenisation is
+  # exercised against synthetic identities in sample-data/edge-cases.
+  mode: tokenise                    # passthrough | tokenise | drop
+  tokenise_fields: [patient_name, uhid, doctor_name, hospital_address]
+  keep_plaintext_fields: [hospital_name, lab_or_hospital_name]
+  hmac_key_source: env              # env | secret_manager
+  hmac_key_env: VERITAS_PII_KEY
+  redaction_markers: ["[PATIENT NAME REDACTED]", "[AGE REDACTED]",
+                      "[GENDER REDACTED]", "[DOCTOR NAME REDACTED]",
+                      "[UHID-REDACTED]", "[HOSPITAL NAME REDACTED]",
+                      "[HOSPITAL ADDRESS REDACTED]", "[LAB NAME REDACTED]",
+                      "[NAME REDACTED]", "[CASE-REDACTED]", "[NT-REDACTED]"]
+
+runtime:
+  workers: 0                        # 0 = os.cpu_count()
+  batch_size: 500                   # files per DB transaction
+  max_file_bytes: 20971520          # 20 MiB; larger goes to the DLQ unread
+  fail_fast: false                  # a bad file must never stop the run
+
+observability:
+  log_format: json                  # json | text
+  log_level: INFO
+  sample_payload_on_error: true
+  error_rate_alert_threshold: 0.01  # NFR-5.1
+  lag_alert_seconds: 900            # NFR-1.2, 15 minutes

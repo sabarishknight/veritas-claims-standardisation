@@ -1,0 +1,96 @@
+{
+ "traceId": "6840581d289b4552b11832ecfd43b312",
+ "statusCode": "200",
+ "message": [
+  "Success"
+ ],
+ "data": {
+  "responseDetails": [
+   {
+    "classifier": "discharge_summary",
+    "data": {
+     "admissionDate": "02-10-2025",
+     "dischargeDate": "06-10-2025",
+     "age": "33Y11M26D",
+     "gender": "Female",
+     "patientName": "Priya Raghunathan",
+     "doctorName": "Dr. A. Venkatesan",
+     "hospitalName": "Lakeview Multispeciality",
+     "hospitalAddress": "48 Nungambakkam High Road, Chennai 600034",
+     "briefHistory": "Admitted with fever and dysuria for four days.",
+     "diagnosis": "Acute pyelonephritis",
+     "generalExaminations": "Temp 101.2F, PR 96/min, BP 110/70 mmHg",
+     "recommendations": "Review in one week. Complete the antibiotic course.",
+     "ward": "SEMI PRIVATE",
+     "postDischargeAdvice": null,
+     "courseDuringHospitalisation": [],
+     "dischargeMedications": [
+      {
+       "medicine": "TAB. CEFTAS- 400",
+       "dose": "400 mg",
+       "frequency": "12 HOURLY",
+       "type": null
+      },
+      {
+       "medicine": "Tab. Dolo 650",
+       "dose": "650 mg",
+       "frequency": "SOS",
+       "type": null
+      },
+      {
+       "medicine": "Cap. Pan D",
+       "dose": "1 CAP",
+       "frequency": "BD",
+       "type": null
+      },
+      {
+       "medicine": "SYRINGE 5ML",
+       "dose": "",
+       "frequency": "",
+       "type": null
+      },
+      {
+       "medicine": "N/A",
+       "dose": "N/A",
+       "frequency": "N/A",
+       "type": null
+      }
+     ],
+     "medicineInjectionsInvestigation": [
+      "INJ. MONOCEF 1 GM IV 12 HRLY",
+      "INJ PANTOP 40 MG IV OD"
+     ]
+    },
+    "status": "success",
+    "errorMessage": null,
+    "fileId": null
+   }
+  ],
+  "correlationId": "f9cec5ce9d2e44e6875072cf76b989cb",
+  "documentId": "DOC58E9514E7017499185B0A7C9C4",
+  "metaDetails": [
+   {
+    "key": "DestinationIdentifier",
+    "value": "stg-datalake"
+   },
+   {
+    "key": "claim_no",
+    "value": "CLAIM-PII-SYNTH"
+   },
+   {
+    "key": "nt_code",
+    "value": "NT-SYNTH"
+   },
+   {
+    "key": "source_system",
+    "value": "FASTTRACK"
+   },
+   {
+    "key": "ConsumerClientId",
+    "value": "542014c1-258a-45dc-b1ec-14597d3c6e8e"
+   }
+  ],
+  "status": true,
+  "message": null
+ }
+}

@@ -1,0 +1,41 @@
+# ---------------------------------------------------------------------------
+# Source profile: ARTEMIS   (observed in Sample_JSON_file5)
+#
+# WHAT IS SPECIFIC HERE
+#   1. Envelope carries an extra `case_id` metadata key (handled by _default's
+#      meta map, listed here for documentation).
+#   2. `test_analytics` is an interpretation vocabulary, but the first data row
+#      is the PDF's header row leaked into the payload
+#      (test_name="test_name", test_analytics="low/normal/high").
+#   3. `reports_date` arrives as the literal placeholder "DD/MM/YYYY".
+#   4. Results carry H/L prefix markers ("H 0.7 %", "L 23.5 %") - the lab's own
+#      high/low annotation glued to the value. The result parser strips the
+#      marker, keeps it as evidence, and recomputes the classification.
+#   5. Vitals are interleaved with lab tests in the same `report_details`
+#      array, including the compound "BP": "100/60 mmHg".
+# ---------------------------------------------------------------------------
+clinic_id: ARTEMIS
+schema_version: "2025.08"
+inherits: _default
+priority: 10
+match:
+  source_system: ARTEMIS
+
+documents:
+  lab_report:
+    source_interpretation_semantics: interpretation
+    interpretation_vocabulary: [low, normal, high, present, absent,
+                                "low/normal/high"]
+    # Literal placeholders this source emits instead of leaving a field empty.
+    null_tokens: ["DD/MM/YYYY", "N/A", "NA", "-", "--", "nil", "NIL", "unit",
+                  "range", "result", "test_name"]
+    # Leading markers the lab glues onto a result value.
+    result_prefix_markers: {H: high, L: low, "*": flagged}
+
+dedup:
+  strategy: content_hash
+
+quality_expectations:
+  max_unmapped_test_rate: 0.10
+  max_invalid_row_rate: 0.15
+  max_duplicate_rate: 0.30

@@ -1,0 +1,129 @@
+{
+ "traceId": "8d0a953fb827401491b2faae65be2ca1",
+ "statusCode": "200",
+ "message": [
+  "Success"
+ ],
+ "data": {
+  "responseDetails": [
+   {
+    "classifier": "discharge_summary",
+    "data": {
+     "admissionDate": "26-08-2025",
+     "dischargeDate": "28-Aug-2025",
+     "age": "6/12",
+     "gender": "M",
+     "patientName": "Synthetic Infant",
+     "doctorName": "Dr. Synthetic",
+     "hospitalName": "Paediatric Centre",
+     "hospitalAddress": "Synthetic Road",
+     "briefHistory": "Fever for two days.",
+     "diagnosis": "Viral fever",
+     "generalExaminations": "Weight 7.4 kg",
+     "recommendations": "Review SOS",
+     "ward": "DAY CARE",
+     "postDischargeAdvice": null,
+     "courseDuringHospitalisation": [],
+     "dischargeMedications": [],
+     "medicineInjectionsInvestigation": []
+    },
+    "status": "success",
+    "errorMessage": null,
+    "fileId": null
+   },
+   {
+    "classifier": "lab_report",
+    "data": {
+     "basic_info": {
+      "uhid": "SYN-AGE-2",
+      "age": "33Y11M26D",
+      "bill_date": "LAB55213",
+      "gender": "FEMALE",
+      "lab_or_hospital_name": "Synthetic Labs",
+      "patient_name": "Synthetic Adult",
+      "reports_date": "DD/MM/YYYY"
+     },
+     "report_details": [
+      {
+       "page_no": 0,
+       "range": "range",
+       "result": "result",
+       "test_analytics": "low/normal/high",
+       "test_name": "test_name",
+       "unit": "unit"
+      },
+      {
+       "page_no": 1,
+       "range": "12-15",
+       "result": "H 15.9",
+       "test_analytics": "",
+       "test_name": "Haemoglobin",
+       "unit": "g/dL"
+      },
+      {
+       "page_no": 1,
+       "range": "20-40",
+       "result": "L 14.2",
+       "test_analytics": "",
+       "test_name": "Lymphocyte",
+       "unit": "%"
+      },
+      {
+       "page_no": 1,
+       "range": "",
+       "result": "148/94 mmHg",
+       "test_analytics": "",
+       "test_name": "BP",
+       "unit": "mmHg"
+      },
+      {
+       "page_no": 1,
+       "range": "60-100",
+       "result": "104/min",
+       "test_analytics": "",
+       "test_name": "Pulse",
+       "unit": "/min"
+      },
+      {
+       "page_no": 1,
+       "range": "95-100",
+       "result": "94% On Room Air",
+       "test_analytics": "",
+       "test_name": "SPO2",
+       "unit": "%"
+      }
+     ]
+    },
+    "status": "success",
+    "errorMessage": null,
+    "fileId": null
+   }
+  ],
+  "correlationId": "d2e24a2f57854967824852f98d674cbb",
+  "documentId": "DOCBE943532A2B74B31BED8BFE852",
+  "metaDetails": [
+   {
+    "key": "DestinationIdentifier",
+    "value": "stg-datalake"
+   },
+   {
+    "key": "claim_no",
+    "value": "CLAIM-DEMOGRAPHICS"
+   },
+   {
+    "key": "nt_code",
+    "value": "NT-SYNTH"
+   },
+   {
+    "key": "source_system",
+    "value": "ARTEMIS"
+   },
+   {
+    "key": "ConsumerClientId",
+    "value": "22d93897-b6b4-4919-808a-1cd7d31c1cfb"
+   }
+  ],
+  "status": true,
+  "message": null
+ }
+}

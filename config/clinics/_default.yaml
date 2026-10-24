@@ -1,0 +1,104 @@
+# ---------------------------------------------------------------------------
+# Fallback source profile  (FR-1.3 schema flexibility, NFR-2.1 zero-code onboarding)
+#
+# Used when an incoming file matches no specific profile. It does NOT reject
+# the file: it reads the common envelope, routes documents by `classifier`, and
+# applies the union of all known field spellings. A brand-new clinic therefore
+# flows end-to-end on day zero at reduced confidence, and its rows are tagged
+# `profile=_default` so the ops UI can show "unprofiled source" volume - which
+# is the trigger to write a real profile for it.
+#
+# This is the schema-on-read half of the design: the pipeline never fails
+# because it has not met a clinic before.
+# ---------------------------------------------------------------------------
+clinic_id: _default
+schema_version: "fallback"
+priority: 1000                     # lowest - only wins if nothing else matches
+match: {}                          # matches everything
+
+envelope:
+  trace_id_path: "traceId"
+  status_code_path: "statusCode"
+  records_path: "data.responseDetails[*]"
+  classifier_field: "classifier"
+  payload_field: "data"
+  record_status_field: "status"
+  record_error_field: "errorMessage"
+  document_id_path: "data.documentId"
+  correlation_id_path: "data.correlationId"
+  meta:
+    path: "data.metaDetails[*]"
+    key_field: "key"
+    value_field: "value"
+    # Envelope metadata keys -> canonical column names.
+    map:
+      DestinationIdentifier: destination_identifier
+      claim_no: claim_no
+      nt_code: nt_code
+      source_system: source_system
+      ConsumerClientId: consumer_client_id
+      case_id: case_id
+
+# Accepted date spellings, tried in order. Anything that parses by none of
+# these is kept verbatim in the *_text column and flagged - never coerced.
+date_formats:
+  - "%d-%m-%Y"
+  - "%d/%m/%Y"
+  - "%d-%b-%Y"
+  - "%d/%b/%Y"
+  - "%Y-%m-%d"
+  - "%d-%B-%Y"
+  - "%d %b %Y"
+  - "%m/%d/%Y"
+
+documents:
+
+  lab_report:
+    header_path: "basic_info"
+    header_map:
+      patient_name: [patient_name, patientName, name]
+      age: [age, patient_age]
+      gender: [gender, sex]
+      uhid: [uhid, UHID, mrn, patient_id]
+      lab_or_hospital_name: [lab_or_hospital_name, hospitalName, labName]
+      reports_date: [reports_date, report_date, reportDate]
+      bill_date: [bill_date, billDate, invoice_date]
+    rows_path: "report_details[*]"
+    row_map:
+      test_name: [test_name, testName, test, name]
+      result: [result, value, observed_value]
+      range: [range, reference_range, ref_range, normal_range]
+      unit: [unit, units, uom]
+      page_no: [page_no, page, page_number]
+      source_interpretation: [test_analytics, interpretation, flag]
+    # What the source's own interpretation column actually contains. Unknown
+    # means "do not read it". We recompute the classification regardless
+    # (41% of sample labels were arithmetically wrong - docs/data-profile.md F-2).
+    source_interpretation_semantics: unknown
+
+  discharge_summary:
+    header_path: "."                # the payload itself is the header
+    header_map:
+      patient_name: [patientName, patient_name]
+      age: [age]
+      gender: [gender]
+      hospital_name: [hospitalName, hospital_name]
+      hospital_address: [hospitalAddress, hospital_address]
+      doctor_name: [doctorName, doctor_name]
+      admission_date: [admissionDate, admission_date]
+      discharge_date: [dischargeDate, discharge_date]
+      diagnosis: [diagnosis]
+      brief_history: [briefHistory, brief_history]
+      general_examinations: [generalExaminations, general_examinations]
+      recommendations: [recommendations]
+      post_discharge_advice: [postDischargeAdvice, post_discharge_advice]
+      ward: [ward]
+      course_during_hospitalisation: [courseDuringHospitalisation,
+                                      courseDuringHospitalization]
+    medications_path: "dischargeMedications[*]"
+    medication_map:
+      medicine: [medicine, name, drug]
+      dose: [dose, dosage, strength]
+      frequency: [frequency, freq]
+      medicine_type: [type, form]
+    investigations_path: "medicineInjectionsInvestigation[*]"

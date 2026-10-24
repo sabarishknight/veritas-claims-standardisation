@@ -1,0 +1,84 @@
+{
+ "traceId": "52e69473cc4948099aa6d09ae3fab40c",
+ "statusCode": "200",
+ "message": [
+  "Success"
+ ],
+ "data": {
+  "responseDetails": [
+   {
+    "classifier": "lab_report",
+    "data": {
+     "basic_info": {
+      "patientName": "Unprofiled Patient",
+      "patient_age": "58 Years",
+      "sex": "Female",
+      "mrn": "MER-99881",
+      "labName": "Meridian Reference Laboratory",
+      "reportDate": "2025-10-14",
+      "billDate": "2025-10-14"
+     },
+     "report_details": [
+      {
+       "page": 1,
+       "testName": "Haemoglobin",
+       "value": "11.2",
+       "reference_range": "12-15",
+       "units": "g/dL",
+       "flag": "low"
+      },
+      {
+       "page": 1,
+       "testName": "Total Leucocyte Count",
+       "value": "12400",
+       "reference_range": "4000-11000",
+       "units": "cells/cu.mm",
+       "flag": "high"
+      },
+      {
+       "page": 1,
+       "testName": "Serum Creatinine",
+       "value": "0.9",
+       "reference_range": "0.6-1.1",
+       "units": "mg/dL",
+       "flag": "normal"
+      }
+     ]
+    },
+    "status": "success",
+    "errorMessage": null,
+    "fileId": null
+   }
+  ],
+  "correlationId": "33c82279aa3049fe807e1bba4e464184",
+  "documentId": "DOCFC88FDA4E97A48C78E2452C4C6",
+  "metaDetails": [
+   {
+    "key": "DestinationIdentifier",
+    "value": "stg-datalake"
+   },
+   {
+    "key": "claim_no",
+    "value": "CLAIM-UNPROFILED"
+   },
+   {
+    "key": "nt_code",
+    "value": "NT-SYNTH"
+   },
+   {
+    "key": "source_system",
+    "value": "MERIDIAN_LABS"
+   },
+   {
+    "key": "ConsumerClientId",
+    "value": "4b11ecdd-39f5-4264-b813-c106f9320c90"
+   },
+   {
+    "key": "facility_tier",
+    "value": "TIER2"
+   }
+  ],
+  "status": true,
+  "message": null
+ }
+}

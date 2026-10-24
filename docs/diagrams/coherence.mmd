@@ -1,0 +1,33 @@
+flowchart TD
+  ROW["Lab row as received<br/>test_name · result · range · unit"]
+  RESOLVE["Resolve the name<br/>exact → alias → normalised<br/>→ fuzzy → LLM"]
+  NONTEST{"Is it a test<br/>at all?"}
+  DLQ[["Dead letter<br/>panel_heading · header_row_leaked<br/>imaging_narrative"]]
+  MAPPED{"Name<br/>resolved?"}
+  REVIEW[["Review queue<br/>unmapped_test"]]
+  DIM{"Unit dimension<br/>matches the test?"}
+  MAG{"Reference range<br/>plausible for the test?"}
+  OK["Harmonise units<br/>value AND range together"]
+  CLASS["Classify<br/>Outlier → Above/Below/Within"]
+  BAD["Invalid<br/>unit_dimension_mismatch /<br/>range_implausible_for_test"]
+  REPORT{"≥3 rows failed AND<br/>they cohere one row away?"}
+  QUAR[["Quarantine the report<br/>propose offset<br/>NEVER auto-correct"]]
+  LOAD[("Loaded to BigQuery")]
+
+  ROW --> RESOLVE --> NONTEST
+  NONTEST -- no --> DLQ
+  NONTEST -- yes --> MAPPED
+  MAPPED -- no --> REVIEW
+  MAPPED -- yes --> DIM
+  DIM -- no --> BAD
+  DIM -- yes --> MAG
+  MAG -- no --> BAD
+  MAG -- yes --> OK --> CLASS --> LOAD
+  BAD --> REPORT
+  REPORT -- yes --> QUAR
+  REPORT -- no --> LOAD
+
+  classDef bad fill:#f7d7d7,stroke:#d03b3b,color:#0b0b0b
+  classDef good fill:#cde2fb,stroke:#2a78d6,color:#0b0b0b
+  class BAD,QUAR,DLQ bad
+  class OK,CLASS,LOAD good

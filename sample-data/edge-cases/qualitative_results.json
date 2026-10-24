@@ -1,0 +1,136 @@
+{
+ "traceId": "1e2b3b2196df4fbaabef9932d2871fdd",
+ "statusCode": "200",
+ "message": [
+  "Success"
+ ],
+ "data": {
+  "responseDetails": [
+   {
+    "classifier": "lab_report",
+    "data": {
+     "basic_info": {
+      "uhid": "SYN-0001",
+      "age": "41 Years",
+      "bill_date": "12-10-2025",
+      "gender": "M",
+      "lab_or_hospital_name": "Synthetic Diagnostics",
+      "patient_name": "Test Patient",
+      "reports_date": "12-10-2025"
+     },
+     "report_details": [
+      {
+       "page_no": 0,
+       "range": "Less than 1:80",
+       "result": "POSITIVE",
+       "test_analytics": "",
+       "test_name": "WIDAL TEST",
+       "unit": ""
+      },
+      {
+       "page_no": 0,
+       "range": "= 1 COI - Equivocal",
+       "result": "NEGATIVE",
+       "test_analytics": "",
+       "test_name": "DENGUE NS 1",
+       "unit": ""
+      },
+      {
+       "page_no": 0,
+       "range": "",
+       "result": "",
+       "test_analytics": "",
+       "test_name": "TYPHI DOT IGG & IGM",
+       "unit": ""
+      },
+      {
+       "page_no": 0,
+       "range": "0-6",
+       "result": "48.2",
+       "test_analytics": "",
+       "test_name": "CRP-QUANTITATIVE",
+       "unit": "mg/L"
+      },
+      {
+       "page_no": 0,
+       "range": "0-6",
+       "result": "POSITIVE",
+       "test_analytics": "",
+       "test_name": "CRP-QUANTITATIVE",
+       "unit": "mg/L"
+      },
+      {
+       "page_no": 1,
+       "range": "NEGATIVE",
+       "result": "NEGATIVE",
+       "test_analytics": "",
+       "test_name": "KETONE BODIES",
+       "unit": ""
+      },
+      {
+       "page_no": 1,
+       "range": "NIL",
+       "result": "NIL",
+       "test_analytics": "",
+       "test_name": "PROTEIN (ALBUMIN)",
+       "unit": "NIL"
+      },
+      {
+       "page_no": 1,
+       "range": "",
+       "result": "NOT DETECTED",
+       "test_analytics": "",
+       "test_name": "MALARIA ANTIGEN",
+       "unit": "NOT DETECTED"
+      },
+      {
+       "page_no": 1,
+       "range": "4.6-8.0",
+       "result": "6.0",
+       "test_analytics": "",
+       "test_name": "pH",
+       "unit": ""
+      },
+      {
+       "page_no": 1,
+       "range": "1.005 TO 1.030",
+       "result": "1.015",
+       "test_analytics": "",
+       "test_name": "SP. GRAVITY",
+       "unit": ""
+      }
+     ]
+    },
+    "status": "success",
+    "errorMessage": null,
+    "fileId": null
+   }
+  ],
+  "correlationId": "9e5999538546466da1f569d17c5a2be2",
+  "documentId": "DOCD9B6F2ACD5054DCD846FD764C6",
+  "metaDetails": [
+   {
+    "key": "DestinationIdentifier",
+    "value": "stg-datalake"
+   },
+   {
+    "key": "claim_no",
+    "value": "CLAIM-QUALITATIVE"
+   },
+   {
+    "key": "nt_code",
+    "value": "NT-SYNTH"
+   },
+   {
+    "key": "source_system",
+    "value": "FASTTRACK"
+   },
+   {
+    "key": "ConsumerClientId",
+    "value": "a1669315-5743-4638-9f02-82fed3d70579"
+   }
+  ],
+  "status": true,
+  "message": null
+ }
+}
